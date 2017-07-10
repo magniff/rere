@@ -1,6 +1,5 @@
 *.pyc
 *.swp
-build
 .project
 .pydevproject
 .settings/*
@@ -9,6 +8,7 @@ venv/*
 .coverage
 .cache
 *.c
+*.so
 *.o
 
 errors.txt
