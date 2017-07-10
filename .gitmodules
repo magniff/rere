@@ -1,0 +1,3 @@
+[submodule "pyinstaller"]
+	path = pyinstaller
+	url = git@gitlab.ptsecurity.ru:extlibs/PyInstaller.git

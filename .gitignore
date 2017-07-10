@@ -1,0 +1,17 @@
+*.pyc
+*.swp
+build
+.project
+.pydevproject
+.settings/*
+src/*
+venv/*
+.coverage
+.cache
+*.c
+*.o
+
+errors.txt
+runall.sh
+*.egg*
+
