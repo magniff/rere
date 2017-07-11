@@ -25,29 +25,11 @@ Regex = rffi.CStruct(
 )
 
 
-rlist = rffi.CStruct(
-    'RegexList',
-    ('count', rffi.ULONGLONG),
-    ('regex', lltype.Ptr(rffi.CArray(Regex))),
-)
-
-
-RegexList = lltype.Ptr(rlist)
-
-
-ResultItem = lltype.Struct(
-    'ResultItem',
-    ('regex_id', rffi.ULONGLONG),
-    ('span_from', rffi.ULONGLONG),
-    ('span_to', rffi.ULONGLONG),
-)
-
-
-ResultList = lltype.Ptr(
-    lltype.Struct(
-        'ResultList',
+RegexList = lltype.Ptr(
+    rffi.CStruct(
+        'RegexList',
         ('count', rffi.ULONGLONG),
-        ('result', lltype.Ptr(lltype.Array(ResultItem))),
+        ('regex', lltype.Ptr(rffi.CArray(Regex))),
     )
 )
 
@@ -109,6 +91,7 @@ def unpack_regex_list(regex_list):
 )
 def tokenize(regex_list, input_bytes, input_len):
     input_string = rffi.charp2strn(input_bytes, input_len)
+    # unpack_regex_list(regex_list)
     return 0
 
 
