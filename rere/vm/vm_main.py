@@ -6,32 +6,55 @@ import os
 from rpython.rlib.entrypoint import entrypoint_highlevel
 from rpython.rlib.runicode import str_decode_utf_8
 from rpython.rtyper.lltypesystem import rffi, lltype
+from rpython.translator.tool.cbuild import ExternalCompilationInfo
+
+from rpython.rtyper.tool import rffi_platform
+
+eci = ExternalCompilationInfo(
+    includes=['vm_headers.h',],
+    include_dirs=['/home/magniff/workspace/rere/rere/build',]
+)
 
 
-RegexTransition = rffi.CStruct(
+RegexTransition = rffi_platform.Struct(
     'RegexTransition',
-    ('input', rffi.ULONGLONG),
-    ('output', rffi.ULONGLONG),
-    ('value', rffi.CHAR),
+    [
+        ('input', rffi.ULONGLONG),
+        ('output', rffi.ULONGLONG),
+        ('value', rffi.CHAR),
+    ]
 )
 
 
-Regex = rffi.CStruct(
+Regex = rffi_platform.Struct(
     'Regex',
-    ('regex_id', rffi.ULONGLONG),
-    ('init_state', rffi.ULONGLONG),
-    ('count', rffi.ULONGLONG),
-    ('transitions', lltype.Ptr(rffi.CArray(RegexTransition))),
-)
-
-
-RegexList = lltype.Ptr(
-    rffi.CStruct(
-        'RegexList',
+    [
+        ('regex_id', rffi.ULONGLONG),
+        ('init_state', rffi.ULONGLONG),
         ('count', rffi.ULONGLONG),
-        ('regex', lltype.Ptr(rffi.CArray(Regex))),
-    )
+        ('transitions', rffi.VOIDP),
+    ]
 )
+
+
+RegexList = rffi_platform.Struct(
+    'RegexList',
+    [
+        ('count', rffi.ULONGLONG),
+        ('regex', rffi.VOIDP),
+    ]
+)
+
+
+class Config:
+    _compilation_info_ = eci
+    regex_transition = RegexTransition
+    regex = Regex
+    regex_list = RegexList
+
+
+config = rffi_platform.configure(Config())
+
 
 
 def run_token(token, input_data, index):
@@ -87,7 +110,7 @@ def unpack_regex_list(regex_list):
 
 @entrypoint_highlevel(
     key='main', c_name='tokenize',
-    argtypes=[RegexList, rffi.CCHARP, rffi.LONGLONG]
+    argtypes=[lltype.Ptr(config['regex_list']), rffi.CCHARP, rffi.LONGLONG]
 )
 def tokenize(regex_list, input_bytes, input_len):
     input_string = rffi.charp2strn(input_bytes, input_len)

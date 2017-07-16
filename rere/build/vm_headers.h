@@ -3,27 +3,27 @@ void rpython_startup_code();
 
 
 typedef struct{
-    unsigned long long c_input;
-    unsigned long long c_output;
-    char c_value;
+    unsigned long long input;
+    unsigned long long output;
+    char value;
 }RegexTransition;
 
 
 typedef struct{
-    unsigned long long c_regex_id;
-    unsigned long long c_init_state;
-    unsigned long long c_count;
-    RegexTransition* c_transitions;
+    unsigned long long regex_id;
+    unsigned long long init_state;
+    unsigned long long count;
+    RegexTransition* transitions;
 }Regex;
 
 
 typedef struct{
-    unsigned long long c_count;
-    Regex* c_regex;
+    unsigned long long count;
+    Regex* regex;
 }RegexList;
 
 
-int tokenize(
-    RegexList* regex_list, char* input_string, long long input_len
+long tokenize(
+    RegexList* regex_list, char* input_string, long input_len
 );
 
