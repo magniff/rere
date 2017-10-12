@@ -33,6 +33,7 @@ def run_machine_with_mark(machine, input_data):
 
     span_start = 0
     stack = list()
+    print(transitions)
 
     for index, char in enumerate(input_data):
         current_state = transitions.get(current_state, dict()).get(char)
@@ -234,25 +235,6 @@ TEST_MATCH = [
     # This case is totally pathological for backtrackers
     # (a+)*b+
     (
-        Sequence(
-            Star(Plus(Char('a'))),
-            Plus(Char('b')),
-        ),
-        [
-            ('ab', RESULT_SUCCESS),
-            ('bbbbbbbbbbbbbbbbbbbbb', RESULT_SUCCESS),
-            ('b', RESULT_SUCCESS),
-            ('aaab', RESULT_SUCCESS),
-            ('aaaaaaaaaaaaaaaaaaaab', RESULT_SUCCESS),
-            ('aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbb', RESULT_SUCCESS),
-            ('a' * 800, RESULT_FAIL),
-            ('a' * 800 + 'b' * 1500, RESULT_SUCCESS),
-            ('aaaaaaaaaaaaaaaaaaaa', RESULT_FAIL),
-            ('aaaaaaaabaaaaaaaaaaaa', RESULT_FAIL),
-        ]
-    ),
-
-    (
         Star(Plus(Char('a'))) + Plus(Char('b')),
         [
             ('ab', RESULT_SUCCESS),
@@ -423,4 +405,5 @@ def test_mark(regex, input_result):
     machine = frontend.build_regex_matcher(regex)
     for test_input, test_result in input_result:
         assert list(run_machine_with_mark(machine, test_input)) == test_result
+
 

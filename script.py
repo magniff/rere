@@ -24,31 +24,31 @@ def unpack_token_transitions(transitions_dict):
 
 def build_ll_token_transitions(transitions):
     edges = list(unpack_token_transitions(transitions))
-    ll_edges = ffi.new('RegexTransition[%s]' % len(edges))
+    ll_edges = ffi.new('RegexTransition[]', len(edges))
 
     for edge, ll_edge in zip(edges, ll_edges):
         in_node, out_node, sym = edge
-        ll_edge.c_input = in_node
-        ll_edge.c_output = out_node
-        ll_edge.c_value = sym.encode() or b'\00'
+        ll_edge.input = in_node
+        ll_edge.output = out_node
+        ll_edge.value = sym.encode() or b'\00'
 
     return len(ll_edges), ll_edges
 
 
 def build_ll_token_repr(tokens):
     ll_regex_list = ffi.new('RegexList *')
-    ll_regex_array = ffi.new('Regex[%s]' % len(tokens))
-    ll_regex_list[0].c_count = len(tokens)
-    ll_regex_list[0].c_regex = ll_regex_array
+    ll_regexes = ffi.new('Regex[]', len(tokens))
+    ll_regex_list.regex = ll_regexes
+    ll_regex_list.count = len(tokens)
 
-    for (token_id, hl_token), ll_token in zip(tokens, ll_regex_array):
+    for (token_id, hl_token), ll_token in zip(tokens, ll_regexes):
         token_init, transitions = build_regex_matcher(hl_token)
         transitions_count, ll_transitions = build_ll_token_transitions(transitions)
 
-        ll_token.c_transitions = ll_transitions
-        ll_token.c_init_state = token_init
-        ll_token.c_count = transitions_count
-        ll_token.c_regex_id = token_id
+        ll_token.transitions = ll_transitions
+        ll_token.init_state = token_init
+        ll_token.count = transitions_count
+        ll_token.regex_id = token_id
 
     return ll_regex_list
 

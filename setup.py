@@ -39,7 +39,7 @@ def cleanup():
 
 rbuild_research()
 cleanup()
-#build_c_extension()
+build_c_extension()
 
 
 classifiers = [

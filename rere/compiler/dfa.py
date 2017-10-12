@@ -49,7 +49,7 @@ def clusterize_states(graph):
         if current_state_set in visited:
             continue
 
-        # just iter over alphabet to clusterize states anZd build edges
+        # just iterate over the alphabet to clusterize states and build edges
         for symbol in alphabet:
             state_set_for_symbol = set()
             for state in current_state_set:
@@ -81,6 +81,7 @@ def fetch_mark_from_set(state_set):
     marked_states = [
         state for state in state_set if isinstance(state, MarkedState)
     ]
+
     if len(marked_states) > 1:
         raise ValueError("Too many marked states in set %s" % state_set)
 
@@ -90,6 +91,7 @@ def fetch_mark_from_set(state_set):
 
 def remap_states(clusterized_states_iterator):
     marks = dict()
+
     states_map = defaultdict(lambda: len(states_map))
     remaped_states = defaultdict(dict)
 

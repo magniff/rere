@@ -3,12 +3,22 @@
 
 
 import os
+from collections import namedtuple
+
 from rpython.rlib.entrypoint import entrypoint_highlevel
 from rpython.rlib.runicode import str_decode_utf_8
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
-
 from rpython.rtyper.tool import rffi_platform
+
+
+RESULT_FAIL = 1
+RESULT_SUCCESS = 0
+
+
+Token = namedtuple('Token', 'token_id start end status')
+INVALID_NEXT_STATE = -1
+
 
 eci = ExternalCompilationInfo(
     includes=['vm_headers.h',],
@@ -56,51 +66,61 @@ class Config:
 config = rffi_platform.configure(Config())
 
 
+def run_machine(machine, input_data):
+    token_id, init_state, transitions = machine
+    current_state = init_state
 
-def run_token(token, input_data, index):
-    pass
+    for char in input_data:
+        places_to_go_next = transitions.get(current_state, {})
+        if char not in places_to_go_next:
+            return RESULT_FAIL
+        current_state = places_to_go_next[char]
 
+    what_left = transitions.get(current_state, {})
 
-def run_tokenizer(regex_list, input_data):
-
-    input_counter = 0
-    tokens = list()
-
-    while input_counter < len(input_data):
-        for token_name, regex in regex_list:
-            result, index = run(regex, input_data, index)
-            if result == True:
-                tokens.append((token_name, input_counter, index))
-                input_counter = index
-            else:
-                continue
-
-    return tokens
+    next_state = what_left.get(chr(0), INVALID_NEXT_STATE)
+    if next_state != INVALID_NEXT_STATE:
+        return RESULT_SUCCESS
+    else:
+        return RESULT_FAIL
 
 
+def run_several(tokens, input_data):
+    for token in tokens:
+        token_id, init_state, transitions = token
+        print(token_id, run_machine(token, input_data))
+    return 0
+
+
+ArrayOfTransitions = rffi.CArrayPtr(config['regex_transition'])
 def unpack_transitions_list(regex):
     unpacked_transitions = {}
 
-    for index in range(regex.count):
-        current_transition = regex.transitions[index]
+    transitions = rffi.cast(ArrayOfTransitions, regex.c_transitions)
+    for index in range(regex.c_count):
+        current_transition = transitions[index]
         paths_with_this_input = unpacked_transitions.get(
-            current_transition.input, {}
+            current_transition.c_input, {}
         )
-        paths_with_this_input[current_transition.value] = current_transition.output
-        unpacked_transitions[current_transition.input] = paths_with_this_input
+
+        paths_with_this_input[current_transition.c_value] = current_transition.c_output
+        unpacked_transitions[current_transition.c_input] = paths_with_this_input
 
     return unpacked_transitions
 
 
+ArrayOfRegex = rffi.CArrayPtr(config['regex'])
 def unpack_regex_list(regex_list):
     unpacked_result = []
 
-    for index in range(regex_list.count):
-        current_regex = regex_list.regex[index]
+    regexes = rffi.cast(ArrayOfRegex, regex_list.c_regex)
+    for index in range(regex_list.c_count):
+        current_regex = regexes[index]
+
         unpacked_result.append(
             (
-                current_regex.regex_id,
-                current_regex.init_state,
+                current_regex.c_regex_id,
+                current_regex.c_init_state,
                 unpack_transitions_list(current_regex),
             )
         )
@@ -114,8 +134,7 @@ def unpack_regex_list(regex_list):
 )
 def tokenize(regex_list, input_bytes, input_len):
     input_string = rffi.charp2strn(input_bytes, input_len)
-    # unpack_regex_list(regex_list)
-    return 0
+    return run_several(unpack_regex_list(regex_list), input_string)
 
 
 def main(args):
